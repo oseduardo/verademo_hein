@@ -109,4 +109,10 @@ stages:
           export SRCCLR_WORKSPACE_SLUG=3OOuwnp
           curl -sSL https://download.sourceclear.com/ci.sh | bash -s -- scan --skip-compile --update-advisor --allow-dirty
 
-          
+    - task: CmdLine@2
+      displayName: SAST - Policy Scan
+      #condition: and(succeeded(), or(eq(variables['build.sourceBranch'], 'refs/heads/master'), eq(variables['build.sourceBranch'], 'refs/heads/dev')))
+      inputs:
+        script: |
+          chmod 755 veracode-scan-results.sh
+          echo $(build.sourceBranch)          
