@@ -75,7 +75,7 @@ stages:
             echo '[INFO] --- ' $STATUS ' flaws were found.'
             #echo '[INFO] --- Uploading flaws to Azure Work Items...'
             #python Pipeline2AzureWorkItems.py -o oscarrodriguezarias -p verademo -t task -token $(System.AccessToken) -f results.json -bid $(Build.BuildId)
-            exit 1 #This exit code makes the pipeline breaks. Remove this line if you need the pipeline continues its execution
+            #exit 1 #This exit code makes the pipeline breaks. Remove this line if you need the pipeline continues its execution
           elif [ $STATUS -lt 0 ];
           then
             echo '[INFO] --- Pipeline Scan could not be executed...There are some errors...'
