@@ -2,7 +2,7 @@
 
         #$1 VID
         #$2 VKEY
-        #$3 BUILD_ID
+        #$3 APP_NAME
         #$4 SANDBOX_NAME
 
         echo ""
@@ -18,7 +18,7 @@
         SCAN_SLEEP_TIME=120
         JAVA_WRAPPER_LOCATION="."
         OUTPUT_FILE_LOCATION="."
-        OUTPUT_FILE_NAME='VeracodeDetailedReport-Build_ID'$3'.xml'
+        OUTPUT_FILE_NAME='VeracodeDetailedReport-APP-'$3'.xml'
         OUTPUT_TEMP_FILE=$3'_tempfile.txt'
         echo '[INFO] ------------------------------------------------------------------------'
         echo '[INFO] DOWNLOADING VERACODE JAVA WRAPPER'
@@ -30,22 +30,23 @@
                 exit 1
         fi
 
+        echo '[INFO] ------------------------------------------------------------------------'
+        echo '[INFO] Getting app_ID...'
+        app_ID=$(java -verbose -jar $JAVA_WRAPPER_LOCATION/VeracodeJavaAPI.jar -vid $1 -vkey $2 -action GetAppList | grep -w \"$3\" | sed -n 's/.* app_id=\"\([0-9]*\)\" .*/\1/p')
+
+        if [ -z "$app_ID" ];
+        then
+             echo '[INFO] App does not exist'
+             exit 1
+        else
+             echo '[INFO] App-IP: ' $app_ID
+             echo ""
+        fi
+
         # Check if it's a Sandbox Scan
         if [[ "$4" != "" ]]; then
           echo '[INFO] Validating Sandbox ID'
           sandbox_ID=$(java -verbose -jar $JAVA_WRAPPER_LOCATION/VeracodeJavaAPI.jar -vid $1 -vkey $2 -action GetSandboxList -appid $app_ID | grep -w "$6" | sed -n 's/.* sandbox_id=\"\([0-9]*\)\" .*/\1/p')
-          
-          if [ -z "$sandbox_ID" ];
-          then
-               echo '[INFO] Sandbox does not exist'
-               echo '[INFO] Creating Sandbox: ' $6
-               creat_sandbox=$(java -jar $JAVA_WRAPPER_LOCATION/VeracodeJavaAPI.jar -vid $1 -vkey $2 -action createSandbox -appid $app_ID -sandboxname "$6")
-               echo '[INFO] Sandbox created'
-               sandbox_ID=$(java -verbose -jar $JAVA_WRAPPER_LOCATION/VeracodeJavaAPI.jar -vid $1 -vkey $2 -action GetSandboxList -appid $app_ID | grep -w "$6" | sed -n 's/.* sandbox_id=\"\([0-9]*\)\" .*/\1/p')
-               echo '[INFO] New Sandbox ID: ' $sandbox_ID
-          else
-               echo 'Sandbox ID: ' $sandbox_ID
-          fi
         else
           echo '[INFO] There is no a Sandbox specified. This is a Policy Scan'
         fi
@@ -151,75 +152,12 @@
                   #A sandbox scan is not considered an official scan, so PassFail it's only available for Policy Scan
                   #Getting Summary Report
                   java -jar $JAVA_WRAPPER_LOCATION/VeracodeJavaAPI.jar -vid $1 -vkey $2 -action summaryreport -buildid $build_id -outputfilepath $OUTPUT_TEMP_FILE"_SummaryReport.xml"
-                  echo "[INFO] See Summary Report in " $OUTPUT_TEMP_FILE"_SummaryReport.xml file. For detailed report, please go to Veracode platform or download Detailed Report by using APIs"
+                  echo "[INFO] This is a Sandbox Scan - A sandbox scan is not considered an official scan, so PassFail it's only available for Policy Scan"
+                  echo "[INFO] For this Sandbox Scan, please see Summary Report in " $OUTPUT_TEMP_FILE"_SummaryReport.xml file. For detailed report, please go to Veracode platform or download Detailed Report by using APIs"
                   echo ""
+                  rm -rf $OUTPUT_TEMP_FILE
                   exit 0
         fi
 
-        echo '[INFO] VERACODE scan pre-checks'
-        echo '[INFO] directory checks'
-        # Directory argument
-        if [[ "$4" != "" ]]; then
-             UPLOAD_DIR="$4"
-        else
-             echo "[ERROR] Directory not specified."
-             exit 1
-        fi
-     
-        # Check if directory exists
-        if ! [[ -f "$UPLOAD_DIR" ]];
-        then
-             echo "[ERROR] File does not exist"
-             exit 1
-        else
-             echo '[INFO] File set to '$UPLOAD_DIR
-        fi
-
-        # Version argument
-        if [[ "$5" != "" ]];
-        then
-             VERSION=$5
-        else
-             VERSION=`date "+%Y-%m-%d %T"`    # Use date as default
-        fi
-        echo '[INFO] Scan-Name set to '$VERSION
-        echo ""
-
-        OUTPUT_FILE_FULL_PATH=$OUTPUT_FILE_LOCATION$OUTPUT_FILE_NAME
-
-        #Upload files, start prescan and scan
-        echo '[INFO] upload and scan'
-        if [ -z "$sandbox_ID" ];
-        then
-          echo '[INFO] Starting Policy Scan...'
-          java -jar $JAVA_WRAPPER_LOCATION/VeracodeJavaAPI.jar -vid $1 -vkey $2 -action uploadandscan -appname $3 -createprofile true -filepath $4 -version $VERSION > $OUTPUT_FILE_FULL_PATH 2>&1
-          echo ""
-        else
-          echo '[INFO] Starting Sandbox Scan...'
-          java -jar $JAVA_WRAPPER_LOCATION/VeracodeJavaAPI.jar -vid $1 -vkey $2 -action uploadandscan -appname $3 -createprofile true -sandboxname $6 -createsandbox false -filepath $4 -version $VERSION > $OUTPUT_FILE_FULL_PATH 2>&1
-          echo ""
-        fi
-
-        echo $upload_scan_results
-
-        upload_scan_results=$(cat $OUTPUT_FILE_FULL_PATH)
-
-        if [[ $upload_scan_results == *"already exists"* ]];
-        then
-             echo ""
-             echo '[ERROR] This scan name already exists'
-             exit 1
-        elif [[ $upload_scan_results == *"in progress or has failed"* ]];
-        then
-             echo ""
-             echo '[ ERROR ] Something went wrong! A previous scan is in progress or has failed to complete successfully'
-                exit 1
-        else
-             echo ""
-             echo '[INFO] File(s) uploaded and PreScan started'
-        fi
-
-
-        
 
         
