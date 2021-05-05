@@ -92,31 +92,21 @@ stages:
           ./veracode-scan-r.sh $(VID) $(VKEY) verademo_hein ./target/verademo.war $(build.buildNumber) devSandbox_Hein
 
     - task: CmdLine@2
+      displayName: SAST - Policy Scan
+      condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/master'))
+      inputs:
+        script: |
+          chmod 755 veracode-scan-r.sh
+          ./veracode-scan-r.sh $(VID) $(VKEY) verademo_hein ./target/verademo.war $(build.buildNumber)
+          
+    - task: CmdLine@2
       displayName: SCA - OSS Scan
       condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/master'))
       inputs:
         script: |
-          export SRCCLR_SCM_NAME=verademo_azure_componente_1
-          export SRCCLR_SCM_URI=https://dev.azure.com/oscarrodriguezarias/verademo
-          export SRCCLR_SCM_REF=master
-          export SRCCLR_SCM_REF_TYPE=branch
-          export SRCCLR_SCM_REV=123456
+          export SRCCLR_SCM_NAME=verademo_hein_sca
           export SRCCLR_API_TOKEN="$(SRCCLR_API_TOKEN)"
+          export SRCCLR_WORKSPACE_SLUG=3OOuwnp
           curl -sSL https://download.sourceclear.com/ci.sh | bash -s -- scan --skip-compile --update-advisor --allow-dirty
 
-    - task: Veracode@3
-      displayName: SAST - Policy Scan
-      condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/master'))
-      inputs:
-        ConnectionDetailsSelection: 'Credentials'
-        apiId: '$(VID)'
-        apiKey: '$(VKEY)'
-        veracodeAppProfile: 'verademo_azure'
-        version: '$(build.buildNumber)'
-        filepath: 'target/verademo.war'
-        createSandBox: false
-        createProfile: false
-        failTheBuildIfVeracodeScanDidNotInitiate: true
-        scanStatusCheckInterval: '60'
-        importResults: false
-        failBuildOnPolicyFail: true
+          
