@@ -114,14 +114,14 @@ stages:
       #condition: and(succeeded(), or(eq(variables['build.sourceBranch'], 'refs/heads/master'), eq(variables['build.sourceBranch'], 'refs/heads/dev')))
       inputs:
         script: |
-          chmod 755 veracode-scan-results.sh
+          #chmod 755 veracode-scan-results.sh
 
-          if [$(build.sourceBranch) = 'refs/heads/dev'];
+          if [[ $(build.sourceBranch) = "refs/heads/dev" ]];
           then
             echo '[INFO] Getting Sandbox Scan Results...'
-          elif [$(build.sourceBranch) = 'refs/heads/master'];
+          elif [[ $(build.sourceBranch) = "refs/heads/master" ]];
           then
-          echo '[INFO] Getting Policy Scan Results...'
+            echo '[INFO] Getting Policy Scan Results...'
           else
             echo '[INFO] Pipeline Scan results are available in SAST - Pipeline Scan task'
           fi
