@@ -4,16 +4,118 @@
 # https://aka.ms/yaml
 
 trigger:
-- master
+ branches:
+   include:
+   - refs/heads/master
+   - refs/heads/dev
+   - refs/heads/featureX
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'ubuntu-latest'
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+stages:
+# In Veracode Stage it will execute Pipeline Scan or Sandbox Scan or Policy Scan depending on the branch under execution, which could be
+# 'featureX' or 'dev' or 'master' respectively.
+- stage: Veracode
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+  jobs:
+  - job: Build
+
+    steps:
+    
+    - bash:
+      env:
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+        
+    - task: Maven@3
+      inputs:
+        mavenPomFile: 'pom.xml'
+        goals: 'package' # Optional
+        options: # Optional
+        publishJUnitResults: true
+        testResultsFiles: '**/surefire-reports/TEST-*.xml' # Required when publishJUnitResults == True
+        testRunTitle: # Optional
+        codeCoverageToolOption: 'None' # Optional. Options: none, cobertura, jaCoCo. Enabling code coverage inserts the `clean` goal into the Maven goals list when Maven runs.
+        codeCoverageClassFilter: # Optional. Comma-separated list of filters to include or exclude classes from collecting code coverage. For example: +:com.*,+:org.*,-:my.app*.*
+        codeCoverageClassFilesDirectories: # Optional
+        codeCoverageSourceDirectories: # Optional
+        codeCoverageFailIfEmpty: false # Optional
+        javaHomeOption: 'JDKVersion' # Options: jDKVersion, path
+        jdkVersionOption: 'default' # Optional. Options: default, 1.11, 1.10, 1.9, 1.8, 1.7, 1.6
+        jdkDirectory: # Required when javaHomeOption == Path
+        jdkArchitectureOption: 'x64' # Optional. Options: x86, x64
+        mavenVersionOption: 'Default' # Options: default, path
+        mavenDirectory: # Required when mavenVersionOption == Path
+        mavenSetM2Home: false # Required when mavenVersionOption == Path
+        mavenOptions: '-Xmx1024m' # Optional
+        mavenAuthenticateFeed: false
+        effectivePomSkip: false
+        sonarQubeRunAnalysis: false
+        sqMavenPluginVersionChoice: 'latest' # Required when sonarQubeRunAnalysis == True# Options: latest, pom
+        checkStyleRunAnalysis: false # Optional
+        pmdRunAnalysis: false # Optional
+        findBugsRunAnalysis: false # Optional
+
+    - task: CmdLine@2
+      displayName: SAST - Pipeline Scan
+      condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/featureX'))
+      inputs:
+        script: |
+          echo '[INFO] --- Veracode SAST - Pipeline Scan'
+          echo '[INFO] --- Downloading Pipeline Scan (Latest Version)...'
+          curl -sSO https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip
+          unzip pipeline-scan-LATEST.zip
+          echo '[INFO] --- Starting Pipeline Scan execution...'
+          java -Dpipeline.debug=true -jar pipeline-scan.jar -vid $(VID) -vkey $(VKEY) --file target/verademo.war --project_name $(System.TeamProject) --project_url $(Build.BuildUri) -so true --issue_details true
+          STATUS=${?}            
+          if [ $STATUS -gt 0 ];
+          then
+            echo '[INFO] --- Pipeline Scan has finished.'
+            echo '[INFO] --- ' $STATUS ' flaws were found.'
+            #echo '[INFO] --- Uploading flaws to Azure Work Items...'
+            #python Pipeline2AzureWorkItems.py -o oscarrodriguezarias -p verademo -t task -token $(System.AccessToken) -f results.json -bid $(Build.BuildId)
+            exit 1 #This exit code makes the pipeline breaks. Remove this line if you need the pipeline continues its execution
+          elif [ $STATUS -lt 0 ];
+          then
+            echo '[INFO] --- Pipeline Scan could not be executed...There are some errors...'
+            echo '[INFO] --- ' $STATUS
+            exit 1 #This exit code makes the pipeline breaks. Remove this line if you need the pipeline continues its execution
+          fi
+
+    - task: CmdLine@2
+      displayName: SAST - Sandbox Scan
+      condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/dev'))
+      inputs:
+        script: |
+          chmod 755 veracode-scan-r.sh
+          ./veracode-scan-r.sh $(VID) $(VKEY) verademo_hein ./target/verademo.war $(build.buildNumber) devSandbox_Hein
+
+    - task: CmdLine@2
+      displayName: SCA - OSS Scan
+      condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/master'))
+      inputs:
+        script: |
+          export SRCCLR_SCM_NAME=verademo_azure_componente_1
+          export SRCCLR_SCM_URI=https://dev.azure.com/oscarrodriguezarias/verademo
+          export SRCCLR_SCM_REF=master
+          export SRCCLR_SCM_REF_TYPE=branch
+          export SRCCLR_SCM_REV=123456
+          export SRCCLR_API_TOKEN="$(SRCCLR_API_TOKEN)"
+          curl -sSL https://download.sourceclear.com/ci.sh | bash -s -- scan --skip-compile --update-advisor --allow-dirty
+
+    - task: Veracode@3
+      displayName: SAST - Policy Scan
+      condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/master'))
+      inputs:
+        ConnectionDetailsSelection: 'Credentials'
+        apiId: '$(VID)'
+        apiKey: '$(VKEY)'
+        veracodeAppProfile: 'verademo_azure'
+        version: '$(build.buildNumber)'
+        filepath: 'target/verademo.war'
+        createSandBox: false
+        createProfile: false
+        failTheBuildIfVeracodeScanDidNotInitiate: true
+        scanStatusCheckInterval: '60'
+        importResults: false
+        failBuildOnPolicyFail: true
