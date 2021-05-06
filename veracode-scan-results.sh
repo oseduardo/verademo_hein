@@ -55,6 +55,8 @@
         echo ""
         echo "[INFO] checking scan status"
 
+        build_id=""
+
         while true;
         do
 
@@ -66,6 +68,9 @@
                #Check Sandbox Scan Status
                java -jar $JAVA_WRAPPER_LOCATION/VeracodeJavaAPI.jar -vid $1 -vkey $2 -action getbuildinfo -appid $app_ID -sandboxid $sandbox_ID > $OUTPUT_TEMP_FILE 2>&1
              fi
+
+             #Get Build ID
+             build_id=$(cat $OUTPUT_TEMP_FILE | grep "analysis id" | awk -F "\"" '{print $2}')
 
              scan_status=$(cat $OUTPUT_TEMP_FILE)
              if [[ $scan_status = *"Scan In Process"* ]];
