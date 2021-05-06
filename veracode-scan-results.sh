@@ -70,7 +70,7 @@
              fi
 
              #Get Build ID
-             build_id=$(cat $OUTPUT_TEMP_FILE | grep "analysis id" | awk -F "\"" '{print $2}')
+             build_id=$(cat $OUTPUT_TEMP_FILE | grep "build_id" | awk -F "\"" '{print $2}')
 
              scan_status=$(cat $OUTPUT_TEMP_FILE)
              if [[ $scan_status = *"Scan In Process"* ]];
