@@ -91,7 +91,7 @@
                    echo ""
                    echo '[INFO] pre-scan still running ...'
                    echo '[INFO] wait 1 more minute ...'
-                  sleep $PRESCAN_SLEEP_TIME
+                   sleep $PRESCAN_SLEEP_TIME
              elif [[ $scan_status = *"Pre-Scan Success"* ]];
              then
                    if [ -z "$sandbox_ID" ];
@@ -115,6 +115,7 @@
                    then
                         echo ""
                         echo '[INFO] scan has finished'
+                        cat $OUTPUT_TEMP_FILE
                         rm -rf $OUTPUT_TEMP_FILE
                         sleep $SCAN_SLEEP_TIME
                         break;
