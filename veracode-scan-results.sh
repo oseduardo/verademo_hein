@@ -115,7 +115,6 @@
                    then
                         echo ""
                         echo '[INFO] scan has finished'
-                        cat $OUTPUT_TEMP_FILE
                         rm -rf $OUTPUT_TEMP_FILE
                         sleep $SCAN_SLEEP_TIME
                         break;
@@ -125,9 +124,6 @@
 
         echo ""
         echo '[INFO] Scan results'
-
-        echo "Buil_ID - "$build_id
-        exit
 
         if [ -z "$sandbox_ID" ];
              then
