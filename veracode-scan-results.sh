@@ -115,6 +115,8 @@
                    then
                         echo ""
                         echo '[INFO] scan has finished'
+                        cat $OUTPUT_TEMP_FILE
+                        exit
                         rm -rf $OUTPUT_TEMP_FILE
                         sleep $SCAN_SLEEP_TIME
                         break;
