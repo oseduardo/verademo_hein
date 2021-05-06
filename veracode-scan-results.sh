@@ -125,6 +125,9 @@
         echo ""
         echo '[INFO] Scan results'
 
+        echo "Buil_ID - "$build_id
+        exit
+
         if [ -z "$sandbox_ID" ];
              then
                   #Getting Policy Scan PassFail
