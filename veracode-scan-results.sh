@@ -160,10 +160,7 @@
                   echo "[INFO] This is a Sandbox Scan - A sandbox scan is not considered an official scan, so PassFail it's only available for Policy Scan"
                   echo "[INFO] For this Sandbox Scan, please see Summary Report in " $OUTPUT_TEMP_FILE"_SummaryReport.xml file. For detailed report, please go to Veracode platform or download Detailed Report by using APIs"
                   echo ""
-                  cat $OUTPUT_TEMP_FILE"_SummaryReport.xml
+                  cat $OUTPUT_TEMP_FILE"_SummaryReport.xml"
                   rm -rf $OUTPUT_TEMP_FILE
                   exit 0
         fi
-
-
-        
