@@ -91,13 +91,13 @@ stages:
           chmod 755 veracode-scan-r.sh
           ./veracode-scan-r.sh $(VID) $(VKEY) verademo_hein ./target/verademo.war $(build.buildNumber) devSandbox_Hein
 
-#    - task: CmdLine@2
-#      displayName: SAST - Policy Scan
-#      condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/master'))
-#      inputs:
-#        script: |
-#          chmod 755 veracode-scan-r.sh
-#          ./veracode-scan-r.sh $(VID) $(VKEY) verademo_hein ./target/verademo.war $(build.buildNumber)
+    - task: CmdLine@2
+      displayName: SAST - Policy Scan
+      condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/master'))
+      inputs:
+        script: |
+          chmod 755 veracode-scan-r.sh
+          ./veracode-scan-r.sh $(VID) $(VKEY) verademo_hein ./target/verademo.war $(build.buildNumber)
           
     - task: CmdLine@2
       displayName: SCA - OSS Scan
