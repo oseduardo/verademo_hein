@@ -116,14 +116,14 @@
                         echo ""
                         echo '[INFO] scan has finished'
                         rm -rf $OUTPUT_TEMP_FILE
-                        sleep $SCAN_SLEEP_TIME
+                        #sleep $SCAN_SLEEP_TIME
                         break;
                    fi
              fi
         done
 
         echo ""
-        echo '[INFO] Scan results'
+        echo '[INFO] Scan results summary...'
 
         if [ -z "$sandbox_ID" ];
              then
@@ -139,6 +139,23 @@
                        #Getting Summary Report
                        echo ""
                        java -jar $JAVA_WRAPPER_LOCATION/VeracodeJavaAPI.jar -vid $1 -vkey $2 -action summaryreport -buildid $build_id -outputfilepath $OUTPUT_TEMP_FILE"_SummaryReport.xml"
+
+                       #Get Number of Flaws with Very High Severity
+                       echo ""
+                       numScanScore=$(cat $OUTPUT_TEMP_FILE"_SummaryReport.xml" | grep "numflawssev5=" | awk -F "\"" '{print $24}')
+                       numflawssev5=$(cat $OUTPUT_TEMP_FILE"_SummaryReport.xml" | grep "numflawssev5=" | awk -F "\"" '{print $20}')
+                       numflawssev4=$(cat $OUTPUT_TEMP_FILE"_SummaryReport.xml" | grep "numflawssev5=" | awk -F "\"" '{print $18}')
+                       numflawssev3=$(cat $OUTPUT_TEMP_FILE"_SummaryReport.xml" | grep "numflawssev5=" | awk -F "\"" '{print $16}')
+                       numflawssev2=$(cat $OUTPUT_TEMP_FILE"_SummaryReport.xml" | grep "numflawssev5=" | awk -F "\"" '{print $14}')
+                       numflawssev1=$(cat $OUTPUT_TEMP_FILE"_SummaryReport.xml" | grep "numflawssev5=" | awk -F "\"" '{print $12}')
+                       echo '[INFO] Final Score: '$numScanScore
+                       echo '[INFO] Number of flaws - Very High Severity: '$numflawssev5
+                       echo '[INFO] Number of flaws - High Severity: '$numflawssev4
+                       echo '[INFO] Number of flaws - Medium Severity: '$numflawssev3
+                       echo '[INFO] Number of flaws - Low Severity: '$numflawssev2
+                       echo '[INFO] Number of flaws - Very Low Severity: '$numflawssev1
+
+                       echo ""
                        echo "[INFO] See Summary Report in " $OUTPUT_TEMP_FILE"_SummaryReport.xml file. For detailed report, please go to Veracode platform or download Detailed Report by using APIs"
                        echo ""
                        exit 1
