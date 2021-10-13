@@ -156,6 +156,18 @@
                        echo '[INFO] Number of flaws - Very Low Severity: '$numflawssev1
 
                        echo ""
+                       echo "SCA Scan Summary..."
+                       echo ""
+
+                       numTotalThirdPartyComponents=$(cat $OUTPUT_TEMP_FILE"_SummaryReport.xml" | grep "software_composition_analysis blacklisted_components=" | awk -F "\"" '{print $6}')
+                       boolViolatePolicy=$(cat $OUTPUT_TEMP_FILE"_SummaryReport.xml" | grep "software_composition_analysis blacklisted_components=" | awk -F "\"" '{print $8}')
+                       numComponentsViolatingPolicy=$(cat $OUTPUT_TEMP_FILE"_SummaryReport.xml" | grep "software_composition_analysis blacklisted_components=" | awk -F "\"" '{print $4}')
+                       echo "[INFO] Total Number of Third Party Components: "$numTotalThirdPartyComponents
+                       echo "[INFO] Do Third Party Copmponents Violate Policy?: "$boolViolatePolicy
+                       echo "[INFO] Number of Third Party Components Violating Policy: "$numComponentsViolatingPolicy
+                       echo ""
+
+                       echo ""
                        echo "[INFO] See Summary Report in " $OUTPUT_TEMP_FILE"_SummaryReport.xml file. For detailed report, please go to Veracode platform or download Detailed Report by using APIs"
                        echo ""
                        exit 1
