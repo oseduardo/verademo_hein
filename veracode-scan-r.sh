@@ -14,7 +14,7 @@
         OUTPUT_FILE_NAME=$3'-'$5'.txt'
         echo '[INFO] ------------------------------------------------------------------------'
         echo '[INFO] DOWNLOADING VERACODE JAVA WRAPPER'
-        if `wget https://repo1.maven.org/maven2/com/veracode/vosp/api/wrappers/vosp-api-wrappers-java/21.4.7.5/vosp-api-wrappers-java-21.4.7.5.jar -O VeracodeJavaAPI.jar`; then
+        if `wget --no-check-certificate https://repo1.maven.org/maven2/com/veracode/vosp/api/wrappers/vosp-api-wrappers-java/23.4.11.2/vosp-api-wrappers-java-23.4.11.2.jar -O VeracodeJavaAPI.jar`; then
                 chmod 755 VeracodeJavaAPI.jar
                 echo '[INFO] SUCCESSFULLY DOWNLOADED WRAPPER'
         else
